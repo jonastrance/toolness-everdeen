@@ -1,5 +1,29 @@
+copilot/improve-slow-code-performance
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+main

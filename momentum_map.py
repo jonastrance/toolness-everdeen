@@ -14,7 +14,6 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from statistics import mean
 from typing import Dict, Iterable, List, Optional, Tuple
 
 DATA_FILE = Path(__file__).with_name("momentum_data.json")
@@ -96,7 +95,7 @@ def apply_decay(area: Dict, now: datetime) -> bool:
     new_score = max(MIN_SCORE, original_score - decay_amount)
     area["score"] = new_score
     area["last_decay_ts"] = fmt_ts(now)
-    return not math.isclose(original_score, new_score, rel_tol=1e-9, abs_tol=1e-9)
+    return abs(original_score - new_score) > 1e-9
 
 
 def apply_decay_all(data: Dict, now: datetime) -> None:
@@ -140,6 +139,8 @@ def update_area(data: Dict, name: str, delta: float, note: Optional[str], now: d
     # Keep only the most recent entries, using in-place modification
     if len(history) > HISTORY_LIMIT:
         history[:] = history[-HISTORY_LIMIT:]
+        # Keep only the most recent HISTORY_LIMIT entries
+        area["history"] = history[-HISTORY_LIMIT:]
 
     area["score"] = new_score
     area["last_update_ts"] = fmt_ts(now)
@@ -172,7 +173,11 @@ def compute_trend(area: Dict, lookback: int = 5) -> float:
     if not history:
         return 0.0
     recent = history[-lookback:]
-    return mean(entry.get("delta", 0.0) for entry in recent)
+    if not recent:  # Safety check for empty slice
+        return 0.0
+    # Inline mean calculation is faster for small lists
+    total = sum(entry.get("delta", 0.0) for entry in recent)
+    return total / len(recent)
 
 
 def energy_state_from_trend(trend: float, threshold: float = 0.35) -> str:
@@ -222,7 +227,9 @@ def humanize_timedelta(ts: Optional[datetime], now: datetime) -> str:
 def generate_recalibration(snapshots: List[AreaSnapshot]) -> str:
     if not snapshots:
         return "Today, sketch a new momentum target to begin tracking momentum."
-    average_score = mean(snap.score for snap in snapshots)
+    # Inline average calculation with safety check
+    total_score = sum(snap.score for snap in snapshots)
+    average_score = total_score / len(snapshots) if snapshots else 0.0
     # Choose area with lowest score weighted by negative trend.
     def priority(snap: AreaSnapshot) -> float:
         trend_penalty = -snap.trend * 10
@@ -252,6 +259,22 @@ def generate_momentum_whisper(data: Dict) -> Optional[str]:
         return None
     
     averages = {weekday: mean(values) for weekday, values in buckets.items() if values}
+    # Only create buckets as we encounter data
+    buckets: Dict[int, List[float]] = {}
+    for entry in histories:
+        ts = parse_ts(entry.get("timestamp"))
+        if ts is None:
+            continue
+        weekday = ts.weekday()
+        if weekday not in buckets:
+            buckets[weekday] = []
+        buckets[weekday].append(entry.get("delta", 0.0))
+    
+    if not buckets:
+        return None
+    
+    # Calculate averages inline for better performance with explicit length check
+    averages = {weekday: sum(values) / len(values) for weekday, values in buckets.items() if len(values) > 0}
     if not averages:
         return None
     best_day, best_value = max(averages.items(), key=lambda item: item[1])
@@ -309,7 +332,9 @@ def handle_status(_: argparse.Namespace) -> None:
     # Only save if decay actually changed any scores
     if data_changed:
         save_data(data)
+    # Note: decay is applied in render_status via gather_snapshots
     print(render_status(data, now))
+    save_data(data)
 
 
 def handle_reset(args: argparse.Namespace) -> None:
