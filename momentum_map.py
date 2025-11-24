@@ -137,9 +137,9 @@ def update_area(data: Dict, name: str, delta: float, note: Optional[str], now: d
     }
     history: List[Dict] = area.setdefault("history", [])
     history.append(history_entry)
-    # Keep only the most recent entries, more efficient with slice assignment
+    # Keep only the most recent entries, using in-place modification
     if len(history) > HISTORY_LIMIT:
-        area["history"] = history[-HISTORY_LIMIT:]
+        history[:] = history[-HISTORY_LIMIT:]
 
     area["score"] = new_score
     area["last_update_ts"] = fmt_ts(now)
