@@ -1,3 +1,43 @@
 {
-  "areas": {}
+  "areas": {
+    "Deep Work": {
+      "history": [
+        {
+          "delta": 2.0,
+          "note": null,
+          "timestamp": "2025-11-24T01:33:20.932811Z",
+          "weighted_delta": 5.0
+        }
+      ],
+      "last_decay_ts": "2025-11-24T01:33:21.032330Z",
+      "last_update_ts": "2025-11-24T01:33:20.932811Z",
+      "score": 54.9999979266875
+    },
+    "ProjectX": {
+      "history": [
+        {
+          "delta": 3.0,
+          "note": null,
+          "timestamp": "2025-11-24T01:33:20.881850Z",
+          "weighted_delta": 7.5
+        }
+      ],
+      "last_decay_ts": "2025-11-24T01:33:21.032330Z",
+      "last_update_ts": "2025-11-24T01:33:20.881850Z",
+      "score": 57.499996865
+    },
+    "Research": {
+      "history": [
+        {
+          "delta": -1.0,
+          "note": null,
+          "timestamp": "2025-11-24T01:33:20.982682Z",
+          "weighted_delta": -2.5
+        }
+      ],
+      "last_decay_ts": "2025-11-24T01:33:21.032330Z",
+      "last_update_ts": "2025-11-24T01:33:20.982682Z",
+      "score": 47.49999896566667
+    }
+  }
 }

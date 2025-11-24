@@ -171,6 +171,8 @@ def compute_trend(area: Dict, lookback: int = 5) -> float:
     if not history:
         return 0.0
     recent = history[-lookback:]
+    if not recent:  # Safety check for empty slice
+        return 0.0
     # Inline mean calculation is faster for small lists
     total = sum(entry.get("delta", 0.0) for entry in recent)
     return total / len(recent)
@@ -223,8 +225,9 @@ def humanize_timedelta(ts: Optional[datetime], now: datetime) -> str:
 def generate_recalibration(snapshots: List[AreaSnapshot]) -> str:
     if not snapshots:
         return "Today, sketch a new momentum target to begin tracking momentum."
-    # Inline average calculation
-    average_score = sum(snap.score for snap in snapshots) / len(snapshots)
+    # Inline average calculation with safety check
+    total_score = sum(snap.score for snap in snapshots)
+    average_score = total_score / len(snapshots) if snapshots else 0.0
     # Choose area with lowest score weighted by negative trend.
     def priority(snap: AreaSnapshot) -> float:
         trend_penalty = -snap.trend * 10
@@ -257,8 +260,8 @@ def generate_momentum_whisper(data: Dict) -> Optional[str]:
     if not buckets:
         return None
     
-    # Calculate averages inline for better performance
-    averages = {weekday: sum(values) / len(values) for weekday, values in buckets.items() if values}
+    # Calculate averages inline for better performance with explicit length check
+    averages = {weekday: sum(values) / len(values) for weekday, values in buckets.items() if len(values) > 0}
     if not averages:
         return None
     best_day, best_value = max(averages.items(), key=lambda item: item[1])
