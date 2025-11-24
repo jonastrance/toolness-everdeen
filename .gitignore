@@ -1,3 +1,10 @@
+copilot/improve-slow-code-performance
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,3 +26,4 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+main
