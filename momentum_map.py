@@ -62,7 +62,7 @@ def load_data() -> Dict:
 
 def save_data(data: Dict) -> None:
     with DATA_FILE.open("w", encoding="utf-8") as fh:
-        json.dump(data, fh, indent=2, sort_keys=True)
+        json.dump(data, fh, indent=2)
 
 
 @dataclass
@@ -79,9 +79,9 @@ def apply_decay(area: Dict, now: datetime) -> bool:
     last_decay_ts = parse_ts(area.get("last_decay_ts"))
     if last_decay_ts is None:
         last_decay_ts = parse_ts(area.get("last_update_ts"))
-    if last_decay_ts is None:
-        area["last_decay_ts"] = fmt_ts(now)
-        return False
+        if last_decay_ts is None:
+            area["last_decay_ts"] = fmt_ts(now)
+            return False
 
     elapsed_days = (now - last_decay_ts).total_seconds() / 86400.0
     if elapsed_days <= 0:
@@ -137,8 +137,9 @@ def update_area(data: Dict, name: str, delta: float, note: Optional[str], now: d
     }
     history: List[Dict] = area.setdefault("history", [])
     history.append(history_entry)
+    # Keep only the most recent entries, more efficient with slice assignment
     if len(history) > HISTORY_LIMIT:
-        del history[: len(history) - HISTORY_LIMIT]
+        area["history"] = history[-HISTORY_LIMIT:]
 
     area["score"] = new_score
     area["last_update_ts"] = fmt_ts(now)
@@ -183,9 +184,9 @@ def energy_state_from_trend(trend: float, threshold: float = 0.35) -> str:
 
 
 def gather_snapshots(data: Dict, now: datetime) -> List[AreaSnapshot]:
+    """Gather current snapshots of all areas. Assumes decay has already been applied."""
     snapshots: List[AreaSnapshot] = []
     for name, area in data.get("areas", {}).items():
-        apply_decay(area, now)
         score = area.get("score", 0.0)
         trend = compute_trend(area)
         energy_state = energy_state_from_trend(trend)
@@ -235,17 +236,21 @@ def generate_recalibration(snapshots: List[AreaSnapshot]) -> str:
 
 
 def generate_momentum_whisper(data: Dict) -> Optional[str]:
-    histories: List[Dict] = []
-    for area in data.get("areas", {}).values():
-        histories.extend(area.get("history", []))
-    if len(histories) < 8:
-        return None
+    # Single pass through all history entries
     buckets: Dict[int, List[float]] = {i: [] for i in range(7)}
-    for entry in histories:
-        ts = parse_ts(entry.get("timestamp"))
-        if ts is None:
-            continue
-        buckets[ts.weekday()].append(entry.get("delta", 0.0))
+    total_entries = 0
+    
+    for area in data.get("areas", {}).values():
+        for entry in area.get("history", []):
+            ts = parse_ts(entry.get("timestamp"))
+            if ts is None:
+                continue
+            buckets[ts.weekday()].append(entry.get("delta", 0.0))
+            total_entries += 1
+    
+    if total_entries < 8:
+        return None
+    
     averages = {weekday: mean(values) for weekday, values in buckets.items() if values}
     if not averages:
         return None
@@ -296,8 +301,14 @@ def handle_update(args: argparse.Namespace) -> None:
 def handle_status(_: argparse.Namespace) -> None:
     data = load_data()
     now = utcnow()
-    apply_decay_all(data, now)
-    save_data(data)
+    # Apply decay and track if any changes were made
+    data_changed = False
+    for area in data.get("areas", {}).values():
+        if apply_decay(area, now):
+            data_changed = True
+    # Only save if decay actually changed any scores
+    if data_changed:
+        save_data(data)
     print(render_status(data, now))
 
 
