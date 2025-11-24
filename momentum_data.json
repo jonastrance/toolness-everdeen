@@ -1,43 +1,43 @@
 {
   "areas": {
-    "Deep Work": {
+    "Project A": {
       "history": [
         {
-          "delta": 2.0,
+          "delta": 5.0,
           "note": null,
-          "timestamp": "2025-11-24T01:33:20.932811Z",
-          "weighted_delta": 5.0
+          "timestamp": "2025-11-24T01:36:01.340437Z",
+          "weighted_delta": 12.5
         }
       ],
-      "last_decay_ts": "2025-11-24T01:33:21.032330Z",
-      "last_update_ts": "2025-11-24T01:33:20.932811Z",
-      "score": 54.9999979266875
+      "last_decay_ts": "2025-11-24T01:36:01.542561Z",
+      "last_update_ts": "2025-11-24T01:36:01.340437Z",
+      "score": 62.49999578908333
     },
-    "ProjectX": {
+    "Project B": {
       "history": [
         {
           "delta": 3.0,
           "note": null,
-          "timestamp": "2025-11-24T01:33:20.881850Z",
+          "timestamp": "2025-11-24T01:36:01.391070Z",
           "weighted_delta": 7.5
         }
       ],
-      "last_decay_ts": "2025-11-24T01:33:21.032330Z",
-      "last_update_ts": "2025-11-24T01:33:20.881850Z",
-      "score": 57.499996865
+      "last_decay_ts": "2025-11-24T01:36:01.542561Z",
+      "last_update_ts": "2025-11-24T01:36:01.391070Z",
+      "score": 57.499996843937495
     },
-    "Research": {
+    "Project C": {
       "history": [
         {
-          "delta": -1.0,
+          "delta": -2.0,
           "note": null,
-          "timestamp": "2025-11-24T01:33:20.982682Z",
-          "weighted_delta": -2.5
+          "timestamp": "2025-11-24T01:36:01.441517Z",
+          "weighted_delta": -5.0
         }
       ],
-      "last_decay_ts": "2025-11-24T01:33:21.032330Z",
-      "last_update_ts": "2025-11-24T01:33:20.982682Z",
-      "score": 47.49999896566667
+      "last_decay_ts": "2025-11-24T01:36:01.542561Z",
+      "last_update_ts": "2025-11-24T01:36:01.441517Z",
+      "score": 44.99999789491667
     }
   }
 }
